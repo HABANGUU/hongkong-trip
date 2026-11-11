@@ -6,7 +6,7 @@
 // - 대중교통은 여러 경유지 경로를 지원하지 않아 전체 동선은 자동차 경로로 보여준다. 실제 이동은 구간별 길찾기 사용.
 const EMBED_MAX_STOPS=12,APP_MAX_STOPS=5;
 
-function placeQuery(s){return s.name+' '+s.address+' Hong Kong';}
+function placeQuery(s){return query(s);}
 // 순서를 유지한 채 앞 묶음의 마지막 장소가 다음 묶음의 출발점이 되도록 고르게 나눈다.
 function splitRoute(stops,maxStops){
  if(stops.length<2)return [];
@@ -26,18 +26,20 @@ function routeAppUrl(stops){
  return 'https://www.google.com/maps/dir/?'+new URLSearchParams(p);
 }
 let routePart=0;
-function renderRouteMap(stops){
+function renderRouteMap(allStops){
+ // 이름·위치를 모르는 장소는 경로에서 빼되, 번호는 전체 목록 기준을 유지한다.
+ const numbers=[],stops=[];allStops.forEach((s,i)=>{if(query(s)){stops.push(s);numbers.push(i+1);}});
  const box=$('routeOverview');if(!box)return;
  const embedParts=splitRoute(stops,EMBED_MAX_STOPS),appParts=splitRoute(stops,APP_MAX_STOPS);
  $('routeTabs').replaceChildren();$('routeApps').replaceChildren();
  if(!embedParts.length){box.hidden=true;return;}
  box.hidden=false;
  if(routePart>=embedParts.length)routePart=0;
- if(embedParts.length>1)embedParts.forEach((part,i)=>{const b=button(`${part.from+1}→${part.to+1}번`,()=>{routePart=i;renderRouteMap(stops);});if(i===routePart)b.className='active';$('routeTabs').append(b);});
+ if(embedParts.length>1)embedParts.forEach((part,i)=>{const b=button(`${numbers[part.from]}→${numbers[part.to]}번`,()=>{routePart=i;renderRouteMap(allStops);});if(i===routePart)b.className='active';$('routeTabs').append(b);});
  const part=embedParts[routePart],url=routeEmbedUrl(part.stops);
  if($('routeFrame').dataset.src!==url){$('routeFrame').src=url;$('routeFrame').dataset.src=url;}
- const letters=part.stops.map((s,i)=>`${String.fromCharCode(65+i)}=${part.from+i+1}`).join(' · ');
+ const letters=part.stops.map((s,i)=>`${String.fromCharCode(65+i)}=${numbers[part.from+i]}`).join(' · ');
  $('routeLegend').textContent=`지도의 알파벳이 방문 번호예요: ${letters}`;
- for(const p of appParts)$('routeApps').append(link(appParts.length>1?`${p.from+1}→${p.to+1}번 구글맵에서 열기 ↗`:'전체 동선 구글맵에서 열기 ↗',routeAppUrl(p.stops),'route-app'));
+ for(const p of appParts)$('routeApps').append(link(appParts.length>1?`${numbers[p.from]}→${numbers[p.to]}번 구글맵에서 열기 ↗`:'전체 동선 구글맵에서 열기 ↗',routeAppUrl(p.stops),'route-app'));
  $('routeModeNote').textContent=state.mode==='transit'?'대중교통은 여러 곳을 잇는 경로를 지원하지 않아 전체 동선은 자동차 경로로 보여줘요. 실제 이동은 아래 구간별 길찾기를 쓰세요.':state.mode==='walking'?'전체 동선을 도보 경로로 보여줘요.':'전체 동선을 자동차 경로로 보여줘요.';
 }
