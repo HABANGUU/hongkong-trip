@@ -45,7 +45,7 @@ function renderNumberMap(stops){
  for(const group of groups.values()){
   const label=group.map(x=>x.number).join(' · '),popup=el('div','number-popup');
   for(const {stop,number} of group){popup.append(el('strong','',`${number}. ${stop.name}`),el('p','',stop.address),link('구글맵에서 보기 ↗',mapUrl(stop)));}
-  const marker=L.marker(group[0].coords,{title:group.map(x=>`${x.number}. ${x.stop.name}`).join(' / '),icon:L.divIcon({className:'number-marker',html:`<span>${label}</span>`,iconSize:[group.length>1?65:36,36],iconAnchor:[group.length>1?32:18,18]})}).addTo(numberLayers).bindPopup(popup);
+  const marker=L.marker(group[0].coords,{title:group.map(x=>`${x.number}. ${x.stop.name}`).join(' / '),icon:L.divIcon({className:'number-marker',html:`<span>${label}</span>`,iconSize:[group.length>1?65:36,36],iconAnchor:[group.length>1?32:18,18]})}).addTo(numberLayers).bindPopup(popup,{maxWidth:210,minWidth:150});
   group.forEach(x=>markerById.set(x.stop.id,marker));
  }
  // 좌표 누락 장소를 건너뛰어 잘못된 경로를 그리지 않고 연속 구간만 연결한다.
